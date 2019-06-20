@@ -7,15 +7,26 @@ class Block{
         this.data = data;
         this.previousHash = previousHash;
         this.hash = this.calculateHash();
+        this.nonce = 0;
     }
 
     calculateHash(){
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data)).toString();
+        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
+    }
+
+    mineBlock(difficulty){
+        while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")){
+            this.nonce++;
+            this.hash = this.calculateHash();
+        }
+        console.log("Nomber operation: " + this.nonce);
+        console.log("Block mined: " + this.hash);
     }
 }
 
 class Blockchain{
     constructor() {
+        this.difficulty = 4;
         this.chain = [this.createGenesisBlock()];
     }
 
@@ -29,7 +40,7 @@ class Blockchain{
 
     addBlock(newBlock){
         newBlock.previousHash = this.getLatestBlock().hash;
-        newBlock.hash = newBlock.calculateHash();
+        newBlock.mineBlock(this.difficulty)
         this.chain.push(newBlock);
     }
 
@@ -37,20 +48,11 @@ class Blockchain{
         for(let i = 1; i < this.chain.length; i++){
             const currentBlock = this.chain[i];
             const previousBlock = this.chain[i - 1];
-            // console.log("*****"+i);
             if(currentBlock.hash !== currentBlock.calculateHash()){
-               /*  console.log("1 - currentBlock.hash !== currentBlock.calculateHash()!!");
-                console.log(currentBlock.hash);
-                console.log(currentBlock.calculateHash()); */
-
                 return false;
             }
 
             if(currentBlock.previousHash !== previousBlock.hash){
-                /* console.log("2 - currentBlock.previousHash !== previousBlock.hash!!");
-                console.log(currentBlock.previousHash);
-                console.log(previousBlock.hash); */
-
                 return false;
             }
         }
@@ -60,23 +62,9 @@ class Blockchain{
 
 // Ajout des blocs
 let volaCoin = new Blockchain();
+console.log("Mining block 1 ...");
 volaCoin.addBlock(new Block(1,"06/20/2019",{ montant: 5}));
+
+console.log("Mining block 2 ...");
 volaCoin.addBlock(new Block(2, "06/21/2019", { montant: 17 }));
-
-/* console.log("CHINE1******************************************");
-console.log(JSON.stringify(volaCoin, null, 4)); */
-
-// Affichage
-console.log("Est-ce la chaine valide? " );
-console.log(volaCoin.isChainValid()?"oui":"non");
-
-// Modification de donnée
-volaCoin.chain[1].data = {montant : 100};
-volaCoin.chain[1].hash = volaCoin.chain[1].calculateHash();
-
-/* console.log("CHINE2******************************************");
-console.log(JSON.stringify(volaCoin, null, 4)); */
-
-console.log("Est-ce la chaine valide? ");
-console.log(volaCoin.isChainValid() ? "oui" : "non");
 
